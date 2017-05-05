@@ -1,6 +1,53 @@
 $(function() {
     'use strict';
 
+    function fullDocsPath(base) {
+        var body = document.getElementsByClassName('body')[0];
+        var path = body.getAttribute('data-pagename');
+
+        // skip if pagename is undefined (index.html)
+        if (path == 'index') {
+            path = '';
+        } else if (path) {
+          path = path + '/';
+        }
+
+        return '/' + base + '/' + path;
+    }
+
+    /* Wrapper around XMLHttpRequest to make it more convenient
+     * Calls options.success(response, url), providing the response text and
+     *         the canonical URL after redirects.
+     * Calls options.error() on error.
+     * jQuery's wrapper does not supply XMLHttpRequest.responseURL, making
+     * this rewrite necessary. */
+    function xhrGet(url, options) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onload = function() {
+            if(xhr.status >= 200 && xhr.status < 400) {
+                options.success(xhr.responseText, xhr.responseURL);
+                options.complete();
+            } else {
+                options.error();
+                options.complete();
+            }
+        };
+
+        xhr.onerror = function() {
+            options.error();
+            options.complete();
+        };
+
+        xhr.open('GET', url, true);
+        try {
+            xhr.send();
+        } catch(err) {
+            options.error();
+            options.complete();
+        }
+    }
+
     /* Checks a whitelist for non-leaf nodes that should trigger a full page reload */
     function requiresPageload($node) {
         var docsExcludedNav = window.docsExcludedNav;
@@ -24,6 +71,14 @@ $(function() {
 
     function isLeafNode($node) {
         return !$node.siblings('ul:not(.simple)').length;
+    }
+
+    function updateVersionSelector() {
+        $('.version-selector').on('click', function(e) {
+            e.preventDefault();
+            var base = $(e.currentTarget).data('path');
+            window.location.href = fullDocsPath(base);
+        });
     }
 
     function updateSidebar() {
@@ -111,7 +166,8 @@ $(function() {
     function setupFastLoad() {
         if (window.history === undefined ||
             document.querySelectorAll === undefined ||
-            document.body.classList === undefined) {
+            document.body.classList === undefined ||
+            (new XMLHttpRequest()).responseURL === undefined) {
             return false;
         }
 
@@ -130,8 +186,8 @@ $(function() {
                 window.clearTimeout(curLoading.timeoutID);
             }
 
-            if (curLoading.ajax !== undefined) {
-                curLoading.ajax.abort();
+            if (curLoading.xhr !== undefined) {
+                curLoading.xhr.abort();
             }
 
             curLoading = {};
@@ -155,9 +211,14 @@ $(function() {
             }, 10000);
 
             var startTime = new Date();
-            curLoading.ajax = $.ajax({ url: href, dataType: 'html', success: function(pageText) {
+            curLoading.xhr = xhrGet(href, { success: function(pageText, trueUrl) {
                 var enlapsedMs = (new Date()) - startTime;
                 bodyElement.classList.remove('loading');
+
+                // Change URL before loading the DOM to properly resolve URLs
+                if (createHistory) {
+                    window.history.pushState({ href: trueUrl }, '', trueUrl);
+                }
 
                 var page = document.createElement('html');
                 page.innerHTML = pageText;
@@ -165,14 +226,9 @@ $(function() {
                 var newBody = page.querySelector('.body');
                 var newNav = page.querySelector('.sphinxsidebarwrapper');
 
-                // Fade in ONLY if we had enough time to fade out at least some.
+                // Fade in ONLY if we had enough time to start fading out.
                 if (enlapsedMs > (250 / 4)) {
                     newBody.classList.add('loading');
-                }
-
-                // Change URL before loading the DOM to properly resolve URLs
-                if (createHistory) {
-                    window.history.pushState({ href: href }, title, href);
                 }
 
                 // Replace the DOM elements
@@ -185,6 +241,7 @@ $(function() {
                 // Update the sidebar
                 updateSidebar();
                 setupFastLoad();
+                updateVersionSelector();
 
                 if (window.history.onnavigate) {
                     window.history.onnavigate();
@@ -200,20 +257,18 @@ $(function() {
                         window.scroll(0, 0);
                     }
                 }, 1);
-            }, error: function(ev) {
+            }, error: function(err) {
                 // Some browsers consider any file://-type request to be cross-origin.
-                // In this case, fall back to old-style behavior.
-                if (ev.status === 0 && ev.statusText === 'error') {
-                    window.location = href;
-                }
-
+                // Upon any kind of error, fall back to classic behavior
                 console.error('Failed to load ' + href);
+                window.location = href;
             }, complete: function() {
                 abortLoading();
             } });
         };
 
-        var nodes = document.querySelectorAll('.sphinxsidebarwrapper > ul a.reference');
+        // Set up fastnav links
+        var nodes = document.querySelectorAll('.sphinxsidebarwrapper > ul a.reference.internal');
         var handleClickFunction = function(ev) {
             // Ignore anything but vanilla click events, so that people can
             // still use special browser behaviors like open in new tab.
@@ -237,18 +292,6 @@ $(function() {
 
         return true;
     }
-
-    /* Options panel */
-    $('.option-header').on('click', function(e) {
-        // stop propagation to prevent the other click handler below
-        // from reclosing the options panel
-        e.stopPropagation();
-
-        var $target = $(e.currentTarget);
-
-        $target.parent().toggleClass('closed');
-        $target.find('.fa-angle-down, .fa-angle-up').toggleClass('fa-angle-down fa-angle-up');
-    });
 
     $('body').on('click', '#header-db, .sidebar, .content', function(e) {
         $('.option-popup').addClass('closed')
@@ -294,7 +337,7 @@ $(function() {
             $(window).scrollTop(window.scrollY - 75);
         }
     }
-    window.addEventListener("hashchange", offsetHashLink);
+    window.addEventListener('hashchange', offsetHashLink);
     if (location.hash) {
         window.setTimeout(offsetHashLink, 10);
     }
@@ -307,16 +350,13 @@ $(function() {
 
     updateSidebar();
     setupFastLoad();
+    updateVersionSelector();
 
     if(document.querySelector) {
         // Scroll so that the selected navbar element is in view.
         var current = document.querySelector('a.current');
         if(current) {
             current.scrollIntoView(false);
-            // Scroll a bit more so that the selected element isn't hidden by
-            // the Options pane button.
-            var options_header = document.querySelector('.option-header');
-            document.querySelector('.sidebar').scrollTop += options_header.clientHeight;
         }
     }
 });

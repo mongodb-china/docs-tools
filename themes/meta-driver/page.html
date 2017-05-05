@@ -10,6 +10,8 @@
   <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
 {%- endblock -%}
 
+{%- block editlink_icon %}{% endblock %}
+
 {%- block canonicalref %}
   {%- if pagename == 'index' %}
     <link rel="canonical" href="http://docs.mongodb.com/{{theme_project}}/" />
@@ -22,6 +24,12 @@
     {%- if theme_active_branches and version not in theme_active_branches %}
         <div class="alert alert-info">
            <span class="alert-message">This version of the manual is no longer supported.</span>
+        </div>
+    {%- endif %}
+    {%- if theme_is_upcoming %}
+        <div class="alert alert-info">
+           <span class="alert-message">This manual pertains to an upcoming
+           release, and is made available for testing purposes only.</span>
         </div>
     {%- endif %}
 {%- endblock -%}
@@ -41,7 +49,7 @@
   {%- block subnav %} {% endblock %}
 
   {%- block searchbox %}
-      <div class="search-db narrow pull-right"><gcse:searchbox-only resultsUrl="https://docs.mongodb.com/ruby-driver/search/" queryParameterName="query"></gcse:searchbox-only></div>
+      <div class="search-db narrow pull-right"><gcse:searchbox-only resultsUrl="https://docs.mongodb.com/{{theme_project}}/search/" queryParameterName="query"></gcse:searchbox-only></div>
   {% endblock %}
 {% endblock %}
 

@@ -25,7 +25,8 @@ if sys.version_info >= (3, 0):
 
 class OptionData(InheritableContentBase):
     _option_registry = ['pre', 'post', 'final', 'ref', 'content', 'edition',
-                        'description', 'name', 'args', 'aliases', 'default', 'type']
+                        'description', 'name', 'args', 'aliases', 'default', 
+                        'type', 'filename']
 
     @property
     def source(self):
@@ -71,6 +72,30 @@ class OptionData(InheritableContentBase):
             raise TypeError
 
     @property
+    def command(self):
+        if 'command' in self.state:
+            return self.state['command']
+
+    @command.setter
+    def command(self, value):
+        if isinstance(value, basestring):
+            self.state['command'] = value
+        else:
+            raise TypeError('command name must be a string')
+
+    @property
+    def filename(self):
+        if 'filename' in self.state:
+            return self.state['filename']
+
+    @filename.setter
+    def filename(self, value):
+        if isinstance(value, basestring):
+            self.state['filename'] = value
+        else:
+            raise TypeError('filename must be a string')
+
+    @property
     def directive(self):
         if 'directive' in self.state:
             return self.state['directive']
@@ -79,7 +104,7 @@ class OptionData(InheritableContentBase):
 
     @directive.setter
     def directive(self, value):
-        if (value in ('option', 'data', 'setting',
+        if (value in ('option', 'commandoption', 'data', 'setting',
                       'method', 'function', 'class') or
                 value.endswith('setting')):
             self.state['directive'] = value

@@ -7,27 +7,8 @@
 {%- set url_root = pathto('', 1) %}
 
 {%  set script_files = script_files + ["_static/lib/bootstrap.js", "_static/lib/jquery.cookie.js", "_static/navbar.js"] %}
-{%- set github_organization = "tjworks" %}
+{%- set github_organization = "mongodb-china" %}
 
-
-{% macro version_selector() %}
-    <div class="btn-group btn-group-xs pull-right">
-      <button type="button" class="version-button dropdown-toggle" data-toggle="dropdown">
-        {{ theme_version_selector|selectattr('current')|map(attribute='text')|first|e }}<span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu" role="menu">
-        {% for v in theme_version_selector %}
-          {% if v.current %}
-          <li class="active">
-          {% else %}
-          <li>
-          {% endif %}
-            <a {% if not v.current %}class="version-selector" {% endif %}href="#" data-path="{{ v.path }}">{{ v.text }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-{% endmacro %}
 
 {%- macro translationslink() -%}
   {%- block translationslink %}
@@ -36,6 +17,7 @@
 {%- endmacro -%}
 
 {%- macro editlink(type) -%}
+<!-- layout-cn.html -->
   <a class="edit-link" href="http://docs.mongoing.com:8080/?name={{pagename}}" target="_blank" title="直接在Github上翻译或者纠错本页面">
     {% if type == 'icon' %}
       <span class="icon-edit"></span> <span>翻译或纠错本页面</span>
@@ -123,6 +105,7 @@
 {%- endif %}
 
 <head>
+  <!-- <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'> -->
   {%- block htmltitle %}
     <title>{{ title|striptags|e }}</title>
   {%- endblock -%}
@@ -131,9 +114,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="Content-Type" content="text/html; charset={{ encoding }}" />
 
-  {%- if version == theme_upcoming or theme_eol == "true"  %}
-    <meta name="robots" content="noindex,nofollow" />
-  {%- elif version in theme_active_branches or not theme_active_branches %}
+  {%- if version in theme_active_branches or not theme_active_branches %}
     <meta name="robots" content="index" />
   {%- else -%}
     <meta name="robots" content="noindex,nofollow" />
@@ -245,8 +226,78 @@
   </path>
 </svg></button></li></ul></div><div class="nav-background flex flex--center-x nav-background--opaque" data-reactid="66"><div class="nav-panel-bottom" data-reactid="67"><div style="width:inherit;" class="nav-panel-bottom__section--inactive" data-reactid="68"><div class="nav-panel-bottom__section flex flex--space-between flex--wrap" data-reactid="69" style="opacity: 0;"><ul data-reactid="70"><a href="https://docs.mongodb.com/manual" data-reactid="71"><li data-reactid="72"><strong data-reactid="73">Server</strong></li></a></ul></div></div><div style="width:inherit;" class="nav-panel-bottom__section--inactive" data-reactid="74"><div class="nav-panel-bottom__section flex flex--space-between flex--wrap" data-reactid="75" style="opacity: 0;"><ul data-reactid="76"><a href="https://docs.mongodb.com/ecosystem/drivers/" data-reactid="77"><li data-reactid="78"><strong data-reactid="79">Drivers</strong></li></a></ul></div></div><div style="width:inherit;" class="nav-panel-bottom__section--inactive" data-reactid="80"><div class="nav-panel-bottom__section flex flex--space-between flex--wrap" data-reactid="81" style="opacity: 0;"><div class="nav-cta  flex flex--wrap flex--center-all" data-reactid="82"><h2 class="nav-cta__header" data-reactid="83">Try It Now</h2><ul style="width:100%;padding:0;" data-reactid="84"><a class="nav-cta__a" href="https://mongodb.com/mongodb-3.2" data-reactid="85"><li data-reactid="86"><strong data-reactid="87">MongoDB 3.2</strong></li></a><a class="nav-cta__a" href="https://mongodb.com/download-center" data-reactid="88"><li data-reactid="89"><strong data-reactid="90">Download Center</strong></li></a></ul></div><ul data-reactid="91"><a href="https://docs.cloud.mongodb.com/" data-reactid="92"><li data-reactid="93"><strong data-reactid="94">Cloud Manager</strong></li></a><a href="https://docs.opsmanager.mongodb.com/current" data-reactid="95"><li data-reactid="96"><strong data-reactid="97">Ops Manager</strong></li></a></ul></div></div><div style="width:inherit;" class="nav-panel-bottom__section--inactive" data-reactid="98"><div class="nav-panel-bottom__section flex flex--space-between flex--wrap" data-reactid="99" style="opacity: 0;"><ul data-reactid="100"><a href="https://docs.mongodb.com/compass" data-reactid="101"><li data-reactid="102"><strong data-reactid="103">Compass</strong></li></a></ul></div></div><div style="width:inherit;" class="nav-panel-bottom__section--inactive" data-reactid="104"><div class="nav-panel-bottom__section flex flex--space-between flex--wrap" data-reactid="105" style="opacity: 0;"><ul data-reactid="106"><a href="https://docs.mongodb.com/bi-connector" data-reactid="107"><li data-reactid="108"><strong data-reactid="109">BI Connector</strong></li></a></ul></div></div></div></div></nav></nav>  
 {%- endblock %}
-   <!-- The "header-db" nav must be copied manually. Yes, manually.  To copy, view the rendered page, inspect element, and copy the header-id block here. -->
 
+  <div class="option-popup closed">
+    <div class="option-header">
+      <i class="fa fa-gear"></i>
+      <span>OPTIONS</span>
+      <i class="fa fa-angle-up pull-right"></i>
+    </div>
+    <div class="option-body">
+      <ul>
+        {% block version_selector %}
+          <!-- version selector -->
+          <li>
+            <label>{{ _('Version') }}</label>
+            <div class="btn-group btn-group-xs pull-right">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                Select Version <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" role="menu">
+                {% for v in theme_version_selector %}
+                  {% if v.current %}
+                  <li class="active">
+                  {% else %}
+                  <li>
+                  {% endif %}
+                    <a {% if not v.current %}class="version-selector" {% endif %}href="#" data-path="{{ v.path }}">{{ v.text }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </li>
+        {% endblock %}
+        {%- block language_selector %}
+           {#
+              <!-- language selector -->
+              <li>
+                <label>{{ _('Langauges') }}</label>
+                <select class="language-selector pull-right">
+                  {%- for lc,lang in theme_translations -%}
+                      <option data-path="https://{{lc}}.docs.mongodb.com/{{ page_url }}">
+                        {{lang}}
+                      </option>
+                  {% endfor -%}
+                 </select>
+              </li>
+           #}
+        {% endblock %}
+        {%- block format_selector %}
+           <!-- format selector -->
+           <li>
+             <label>{{ _('Formats') }}</label>
+             <ul class="formats-list">
+               {%- if show_source and has_source and sourcename %}
+                   <li><a href="{{ pathto('_sources/' + sourcename, true)|e }}" target="_blank" rel="nofollow">{{ _("This Page's Source") }}</a></li>
+               {%- endif %}
+               {%- block pdflink %}<li><a href="{{ theme_pdfpath }}" target="_blank" rel="nofollow">PDF</a></li>{%- endblock %}
+               {%- block epublink %}{%- endblock %}
+             </ul>
+           </li>
+        {% endblock %}
+        <!-- contribute -->
+        <li>
+          <label>{{ _('Contribute' ) }}</label>
+          <ul class="contribute-list">
+            <li>{{ jiralink() }}</li>
+            {%- block editlink %}
+               <li>{{ editlink() }}</li>
+            {%- endblock %}
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
   <div class="content">
     <div class="main-column pull-left">
 
@@ -319,8 +370,35 @@
   {%- block versionnav %}
 
   <script type="text/javascript">
+  window.fullDocsPath = function(base) {
+    var body = document.getElementsByClassName('body')[0]
+    var path = body.getAttribute('data-pagename');
+
+    // skip if pagename is undefined (index.html)
+    if (path == 'index') {
+        path = '';
+    } else if (path) {
+      path = path + '/';
+    }
+
+    return '/' + base + '/' + path;
+  }
   // Bootstrap array of links that should trigger a full page reload
   window.docsExcludedNav = {{ theme_nav_excluded }};
+
+  $(document).ready(function(){
+    $(".version-selector").on('click', function(e) {
+      e.preventDefault();
+      var base = $(e.currentTarget).data('path');
+      window.location.href = fullDocsPath(base);
+    });
+
+    $("select.language-selector").on('change', function(e) {
+      var path = $(e.currentTarget).find('option:selected').data('path');
+      window.location.href = path;
+    });
+  });
+
   </script>
   {%- endblock -%}
 
